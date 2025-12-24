@@ -427,7 +427,7 @@
             const borderGeo = new THREE.PlaneGeometry(9, 9);
             const borderMat = new THREE.MeshBasicMaterial({ color: 0xFFD700 });
 
-            for (let i = 0; i < 7; i++) { //số ảnh hiển thị 4
+            for (let i = 0; i < photoFiles.length; i++) {
                 const mat = new THREE.MeshBasicMaterial({
                     map: photoTextures[i], side: THREE.DoubleSide
                 });
@@ -458,7 +458,7 @@
             lctx.fillStyle = '#FF3366';
             lctx.shadowColor = '#FF99AA';
             lctx.shadowBlur = 40;
-            lctx.fillText('I LOVE YOU', 512, 160);
+            lctx.fillText('merry christmas bé Hà', 512, 160);
 
             const loveTex = new THREE.CanvasTexture(loveCanvas);
             const loveMat = new THREE.MeshBasicMaterial({
@@ -484,7 +484,7 @@
             ctx.font = 'bold italic 90px "Times New Roman"';
             ctx.fillStyle = '#FFD700'; ctx.textAlign = 'center';
             ctx.shadowColor = "#FF0000"; ctx.shadowBlur = 40;
-            ctx.fillText("MERRY CHRISTMAS", 512, 130);
+            ctx.fillText("merry christmas bé Hà", 512, 130);
 
             const tex = new THREE.CanvasTexture(canvas);
             const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending });
