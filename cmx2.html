@@ -7,7 +7,8 @@
     <title>Christmas</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/control_utils/control_utils.js"
+        crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
 
     <style>
@@ -86,26 +87,119 @@
 
         #camera-preview {
             position: fixed;
-            top: 12px;
-            right: 12px;
-
-            width: 96px;
-            height: 72px;
-
-            border-radius: 10px;
+            top: 10px;
+            right: 10px;
+            width: 80px;
+            height: 60px;
+            border-radius: 8px;
             overflow: hidden;
-
             border: 1.5px solid rgba(255, 255, 255, 0.4);
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
-
             transform: scaleX(-1);
             opacity: 0.65;
-
             z-index: 200;
             pointer-events: none;
             background: #000;
+            display: none;
+            /* Show only when started */
         }
 
+        /* START GUIDE OVERLAY */
+        #start-guide {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #FFD700;
+            padding: 20px;
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+            transition: opacity 0.8s ease;
+        }
+
+        #start-guide h2 {
+            font-size: 28px;
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+
+        .guide-items {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            max-width: 500px;
+            margin-bottom: 35px;
+        }
+
+        .guide-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        .guide-item span {
+            font-size: 24px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        .guide-item p {
+            font-size: 11px;
+            margin: 0;
+            color: #ccc;
+            line-height: 1.4;
+        }
+
+        .start-btn {
+            background: linear-gradient(to bottom, #D32F2F, #8B0000);
+            border: 2px solid #FFD700;
+            color: #FFF;
+            padding: 15px 50px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 18px;
+            letter-spacing: 2px;
+            cursor: pointer;
+            box-shadow: 0 0 30px rgba(255, 0, 0, 0.6);
+            transition: all 0.3s;
+        }
+
+        /* MOBILE OPTIMIZATION */
+        @media (max-width: 768px) {
+            .badge {
+                font-size: 14px;
+                padding: 8px 18px;
+            }
+
+            .guide {
+                font-size: 11px;
+                padding: 0 15px;
+            }
+
+            .guide-items {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            #start-guide h2 {
+                font-size: 22px;
+            }
+
+            button {
+                padding: 12px 35px;
+                font-size: 14px;
+            }
+        }
 
         #error-log {
             display: none;
@@ -122,13 +216,35 @@
 
 <body>
     <div id="error-log"></div>
-    <div id="ui-layer">
+    <div id="start-guide">
+        <h2>🎄 Merry Christmas 🎄</h2>
+        <div class="guide-items">
+            <div class="guide-item">
+                <span>✊ / 🖐</span>
+                <p>Nắm tay để thu cây<br>Mở tay để bung quà</p>
+            </div>
+            <div class="guide-item">
+                <span>👌</span>
+                <p>Chụm 2 ngón tay để xem ảnh</p>
+            </div>
+            <div class="guide-item">
+                <span>🤲</span>
+                <p>2 tay tạo hình trái tim</p>
+            </div>
+            <div class="guide-item">
+                <span>↔️</span>
+                <p>Di chuyển tay để xoay</p>
+            </div>
+        </div>
+        <button class="start-btn" onclick="startSystem()">BẮT ĐẦU</button>
+    </div>
+
+    <div id="ui-layer" style="display:none;">
         <div id="status" class="badge">🎄 Merry Christmas 🎄</div>
         <div class="guide">
-            🖐 <b>Xòe:</b> Bung Quà & Đèn &nbsp;|&nbsp; 👌 <b>Pinch:</b> Xem ảnh &nbsp;|&nbsp; ✊ <b>Nắm:</b> Thu cây
-            &nbsp;|&nbsp; 🤲<b>2 Tay Cong:</b> Trái Tim
+            🖐 <b>Xòe:</b> Bung Quà &nbsp;|&nbsp; 👌 <b>Pinch:</b> Xem ảnh &nbsp;|&nbsp; ✊ <b>Nắm:</b> Thu cây
+            &nbsp;|&nbsp; 🤲<b>2 Tay:</b> Trái Tim
         </div>
-        <button id="btnStart" onclick="startSystem()">Start</button>
     </div>
 
     <div id="canvas-container"></div>
@@ -170,7 +286,7 @@
                 ctx.fillStyle = grd; ctx.fillRect(0, 0, 128, 128);
 
             } else if (type === 'gift_red') {
-                ctx.fillStyle = '#D32F2F'; 
+                ctx.fillStyle = '#D32F2F';
                 ctx.fillRect(20, 20, 88, 88);
                 ctx.fillStyle = '#FFD700';
                 ctx.fillRect(54, 20, 20, 88);
@@ -189,19 +305,21 @@
         // ==========================================
         // 2. SYSTEM CONFIG
         // ==========================================
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
         const CONFIG = {
-            goldCount: 2000,  
-            redCount: 300,  
-            giftCount: 150, 
-            explodeRadius: 65,
-            photoOrbitRadius: 25,
-            treeHeight: 70,
-            treeBaseRadius: 35,
-            heartSize: 40 
+            goldCount: isMobile ? 1000 : 2000,
+            redCount: isMobile ? 150 : 300,
+            giftCount: isMobile ? 80 : 150,
+            explodeRadius: isMobile ? 50 : 65,
+            photoOrbitRadius: isMobile ? 20 : 25,
+            treeHeight: isMobile ? 60 : 70,
+            treeBaseRadius: isMobile ? 25 : 35,
+            heartSize: isMobile ? 30 : 40
         };
 
         let scene, camera, renderer;
-        let groupGold, groupRed, groupGift; 
+        let groupGold, groupRed, groupGift;
         let photoMeshes = [];
         let titleMesh, starMesh;
 
@@ -210,7 +328,7 @@
         let handX = 0.5;
         let heartRotation = 0;
 
-        
+
         // ==========================================
         // 3. THREE.JS SYSTEM
         // ==========================================
@@ -228,8 +346,8 @@
             container.appendChild(renderer.domElement);
 
             groupGold = createParticleSystem('gold', CONFIG.goldCount, 2.0);
-            groupRed = createParticleSystem('red', CONFIG.redCount, 3.5); 
-            groupGift = createParticleSystem('gift', CONFIG.giftCount, 3.0); 
+            groupRed = createParticleSystem('red', CONFIG.redCount, 3.5);
+            groupGift = createParticleSystem('gift', CONFIG.giftCount, 3.0);
 
             createPhotos();
             createDecorations();
@@ -243,11 +361,11 @@
             const pHeartTargets = [];
 
             for (let i = 0; i < count; i++) {
-                
+
                 const h = Math.random() * CONFIG.treeHeight;
                 const y = h - CONFIG.treeHeight / 2;
 
-                
+
                 let radiusRatio = (type === 'gold') ? Math.sqrt(Math.random()) : 0.9 + Math.random() * 0.1;
 
                 const maxR = (1 - (h / CONFIG.treeHeight)) * CONFIG.treeBaseRadius;
@@ -258,13 +376,13 @@
                 const tz = r * Math.sin(theta);
                 pTreeTargets.push(tx, y, tz);
 
-                
+
                 const u = Math.random();
                 const v = Math.random();
                 const phi = Math.acos(2 * v - 1);
                 const lam = 2 * Math.PI * u;
 
-                
+
                 let radMult = (type === 'gift') ? 1.2 : 1.0;
                 const rad = CONFIG.explodeRadius * Math.cbrt(Math.random()) * radMult;
 
@@ -281,7 +399,7 @@
                 let hz = (Math.random() - 0.5) * 15;
                 pHeartTargets.push(hx, hy, hz);
 
-                
+
                 pPositions.push(tx, y, tz);
             }
 
@@ -293,7 +411,7 @@
                 size: size,
                 map: textures[type],
                 transparent: true, opacity: 1.0,
-                
+
                 blending: (type === 'gift') ? THREE.NormalBlending : THREE.AdditiveBlending,
                 depthWrite: false,
                 sizeAttenuation: true
@@ -359,7 +477,7 @@
             loveTextMesh.visible = false;
             scene.add(loveTextMesh);
 
-            
+
             const canvas = document.createElement('canvas');
             canvas.width = 1024; canvas.height = 256;
             const ctx = canvas.getContext('2d');
@@ -374,7 +492,7 @@
             titleMesh.position.set(0, 50, 0);
             scene.add(titleMesh);
 
-            
+
             const starCanvas = document.createElement('canvas');
             starCanvas.width = 128; starCanvas.height = 128;
             const sCtx = starCanvas.getContext('2d');
@@ -407,13 +525,13 @@
             }
             group.geometry.attributes.position.needsUpdate = true;
 
-            
+
             if (targetState === 'TREE') {
                 group.rotation.y += 0.003;
-                
+
                 if (isBlinking) {
-                    
-                    
+
+
                     const scale = 1 + Math.sin(time * 5) * 0.2;
                     group.scale.set(scale, scale, scale);
                 } else {
@@ -434,9 +552,9 @@
             const speed = 0.06;
             const handRotY = (handX - 0.5) * 2.5;
 
-            
+
             updateParticleGroup(groupGold, state, speed, handRotY, time, false);
-            updateParticleGroup(groupRed, state, speed, handRotY, time, false); 
+            updateParticleGroup(groupRed, state, speed, handRotY, time, false);
             updateParticleGroup(groupGift, state, speed, handRotY, time, false);
 
             // Quay trái tim
@@ -454,7 +572,7 @@
 
             }
 
-            
+
             photoMeshes.forEach((mesh, i) => {
                 if (!mesh.material.map && photoTextures[i]) {
                     mesh.material.map = photoTextures[i]; mesh.material.needsUpdate = true;
@@ -518,7 +636,17 @@
         }
 
         function startSystem() {
-            document.getElementById('btnStart').style.display = 'none';
+            const guide = document.getElementById('start-guide');
+            const uiLayer = document.getElementById('ui-layer');
+            const camPreview = document.getElementById('camera-preview');
+
+            guide.style.opacity = '0';
+            setTimeout(() => {
+                guide.remove();
+                uiLayer.style.display = 'block';
+                camPreview.style.display = 'block';
+            }, 800);
+
             bgMusic.play().catch(e => console.log(e));
             init3D();
 
