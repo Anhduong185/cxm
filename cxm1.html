@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grand Luxury Tree</title>
     <style>
-        
         body {
             margin: 0;
             overflow: hidden;
@@ -203,6 +202,113 @@
             background: rgba(0, 0, 0, 0.5);
             padding: 2px 5px;
             pointer-events: none;
+            display: none;
+            /* Hide by default on mobile unless needed */
+        }
+
+        /* START GUIDE OVERLAY */
+        #start-guide {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 13, 26, 0.95);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #fceea7;
+            padding: 20px;
+            box-sizing: border-box;
+            backdrop-filter: blur(15px);
+            transition: opacity 0.8s ease;
+        }
+
+        #start-guide h2 {
+            font-family: 'Cinzel', serif;
+            font-size: 32px;
+            margin-bottom: 30px;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(252, 238, 167, 0.5);
+        }
+
+        .guide-items {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            max-width: 600px;
+            margin-bottom: 40px;
+        }
+
+        .guide-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .guide-item span {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .guide-item p {
+            font-size: 11px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: rgba(212, 175, 55, 0.8);
+            margin: 0;
+        }
+
+        .start-btn {
+            background: linear-gradient(to bottom, #d4af37, #996515);
+            border: none;
+            color: #050d1a;
+            padding: 15px 50px;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 3px;
+            cursor: pointer;
+            border-radius: 2px;
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+            transition: all 0.3s;
+        }
+
+        .start-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 50px rgba(212, 175, 55, 0.5);
+        }
+
+        /* MOBILE OPTIMIZATION */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 36px;
+            }
+
+            .guide-items {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            #webcam-wrapper {
+                width: 100px;
+                height: 75px;
+                top: 10px;
+                right: 10px;
+            }
+
+            .controls-wrapper {
+                bottom: 20px;
+                top: auto;
+                right: 20px;
+            }
+
+            #debug-info {
+                font-size: 8px;
+            }
         }
     </style>
 
@@ -230,6 +336,25 @@
 
     <div id="canvas-container"></div>
 
+    <div id="start-guide">
+        <h2>Magic Christmas</h2>
+        <div class="guide-items">
+            <div class="guide-item">
+                <span>👋</span>
+                <p>Nắm tay lại để tạo hình cây thông</p>
+            </div>
+            <div class="guide-item">
+                <span>✋</span>
+                <p>Mở lòng bàn tay để xoay ảnh</p>
+            </div>
+            <div class="guide-item">
+                <span>👌</span>
+                <p>Chụm ngón tay để phóng to ảnh</p>
+            </div>
+        </div>
+        <button class="start-btn" onclick="window.startExperience()">BẮT ĐẦU</button>
+    </div>
+
     <div id="ui-layer">
         <h1>Merry Christmas</h1>
     </div>
@@ -250,6 +375,13 @@
         import { FilesetResolver, HandLandmarker } from '@mediapipe/tasks-vision';
 
         // --- 核心配置 ---
+        const MUSIC_URL = "./audio.mp3";
+        let bgMusic = new Audio(MUSIC_URL);
+        bgMusic.loop = true;
+        bgMusic.volume = 1.0;
+
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
         const CONFIG = {
             colors: {
                 bg: 0x050d1a,
@@ -259,19 +391,19 @@
                 accentRed: 0x990000,
             },
             particles: {
-                count: 1500,
-                dustCount: 2000,
-                snowCount: 1000,
-                treeHeight: 24,
-                treeRadius: 8
+                count: isMobile ? 800 : 1500,
+                dustCount: isMobile ? 1000 : 2000,
+                snowCount: isMobile ? 500 : 1000,
+                treeHeight: isMobile ? 18 : 24,
+                treeRadius: isMobile ? 6 : 8
             },
-            camera: { z: 50 },
+            camera: { z: isMobile ? 60 : 50 },
 
             preload: {
                 autoScanLocal: true,
                 scanCount: 200,
                 images: [
-                    './img/a1.jpg', './img/a2.jpg', './img/a3.jpg', './img/a4.jpg' , './img/a5.jpg', './img/a6.jpg'  //sửa thêm ảnh ở đây
+                    './img/a1.jpg', './img/a2.jpg', './img/a3.jpg', './img/a4.jpg', './img/a5.jpg', './img/a6.jpg'  //sửa thêm ảnh ở đây
                 ]
             }
         };
@@ -310,12 +442,28 @@
             setupEvents();
             await initMediaPipe();
 
-            const loader = document.getElementById('loader');
-            loader.style.opacity = 0;
-            setTimeout(() => loader.remove(), 800);
-
             animate();
         }
+
+        window.startExperience = async () => {
+            const guide = document.getElementById('start-guide');
+            const loader = document.getElementById('loader');
+
+            // Play Music
+            bgMusic.play().catch(e => console.log("Audio play deferred:", e));
+
+            guide.style.opacity = '0';
+            setTimeout(() => guide.remove(), 800);
+
+            // Trigger system
+            await init();
+
+            // Handle loader
+            setTimeout(() => {
+                loader.style.opacity = 0;
+                setTimeout(() => loader.remove(), 800);
+            }, 1000);
+        };
 
         // --- 增强版图片加载系统 ---
         function loadPredefinedImages() {
@@ -1026,7 +1174,7 @@
             composer.render();
         }
 
-        init();
+        // init(); // Removed ad-hoc init, now triggered by start button
     </script>
 </body>
 
